@@ -1,6 +1,18 @@
 import { MapPin } from "lucide-react";
 
 /**
+ * Générateur pseudo-aléatoire déterministe (LCG) : le n-ième tirage est
+ * calculé à partir du seed sans état mutable partagé.
+ */
+function lcg(seed: number, index: number): number {
+  let s = seed * 9301 + 49297;
+  for (let i = 0; i <= index; i++) {
+    s = (s * 9301 + 49297) % 233280;
+  }
+  return s / 233280;
+}
+
+/**
  * Carte stylisée affichant une ZONE approximative (rayon ~500 m),
  * jamais l'adresse exacte — protection des locataires et propriétaires.
  */
@@ -13,30 +25,33 @@ export default function ZoneMap({
   district: string;
   seed: number;
 }) {
-  // Générateur déterministe pour varier le tracé des rues selon l'annonce
-  let s = seed * 9301 + 49297;
-  const rand = () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-
-  const streets = Array.from({ length: 7 }, (_, i) => ({
-    x1: rand() * 400,
-    y1: i * 42 + rand() * 20,
-    x2: rand() * 400,
-    y2: i * 42 + rand() * 40,
-    w: 1 + rand() * 2,
-  }));
-  const vStreets = Array.from({ length: 6 }, (_, i) => ({
-    x: i * 70 + rand() * 30,
-    bend: rand() * 60 - 30,
-  }));
-  const blocks = Array.from({ length: 10 }, () => ({
-    x: rand() * 360,
-    y: rand() * 240,
-    w: 18 + rand() * 34,
-    h: 14 + rand() * 24,
-  }));
+  // Tracé des rues selon l'annonce (indices contigus pour rester déterministe)
+  const streets = Array.from({ length: 7 }, (_, i) => {
+    const b = i * 5;
+    return {
+      x1: lcg(seed, b) * 400,
+      y1: i * 42 + lcg(seed, b + 1) * 20,
+      x2: lcg(seed, b + 2) * 400,
+      y2: i * 42 + lcg(seed, b + 3) * 40,
+      w: 1 + lcg(seed, b + 4) * 2,
+    };
+  });
+  const vStreets = Array.from({ length: 6 }, (_, i) => {
+    const b = 35 + i * 2;
+    return {
+      x: i * 70 + lcg(seed, b) * 30,
+      bend: lcg(seed, b + 1) * 60 - 30,
+    };
+  });
+  const blocks = Array.from({ length: 10 }, (_, i) => {
+    const b = 47 + i * 4;
+    return {
+      x: lcg(seed, b) * 360,
+      y: lcg(seed, b + 1) * 240,
+      w: 18 + lcg(seed, b + 2) * 34,
+      h: 14 + lcg(seed, b + 3) * 24,
+    };
+  });
 
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-moss/60">

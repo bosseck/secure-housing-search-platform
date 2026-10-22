@@ -93,8 +93,16 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetch("/api/admin/data", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json: Data) => {
+        if (!cancelled) setData(json);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function act(
     url: string,

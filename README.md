@@ -34,21 +34,25 @@ Plateforme de recherche de logements qui **vérifie chaque annonce et chaque ann
 ```bash
 npm install
 cp .env.example .env.local   # puis renseignez DATABASE_URL
+npm run db:push              # crée les tables à partir du schéma Drizzle
+npm run db:seed              # charge le jeu de données de démonstration
 npm run dev
 ```
 
 L'application est disponible sur [http://localhost:3000](http://localhost:3000).
 
+> La base de données par défaut est une instance **Neon** (PostgreSQL managé). Une
+> base locale fonctionne tout autant : il suffit de changer `DATABASE_URL`.
+> Le fichier `.env.local` est ignoré par Git — ne committez jamais vos identifiants.
+
 ## Base de données
 
 Le schéma Drizzle se trouve dans `src/db/schema.ts` (tables `advertisers`, `listings`, `visit_requests`, `reports`).
+La configuration de migration est dans `drizzle.config.ts` (elle lit `DATABASE_URL` depuis `.env.local`).
 
 ```bash
-# appliquer les migrations
-npx drizzle-kit push
-
-# ou charger le jeu de données de démonstration
-psql "$DATABASE_URL" -f scripts/seed.sql
+npm run db:push    # synchronise le schéma avec la base
+npm run db:seed    # recharge les données de démonstration (scripts/seed.sql)
 ```
 
 ## Scripts
@@ -60,6 +64,8 @@ psql "$DATABASE_URL" -f scripts/seed.sql
 | `npm run start` | Serveur de production |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Vérification TypeScript (`tsc --noEmit`) |
+| `npm run db:push` | Synchronise le schéma Drizzle sur la base |
+| `npm run db:seed` | Charge `scripts/seed.sql` |
 
 ## Structure
 
